@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using TMPro;
 using Unity.VisualScripting;
@@ -11,18 +12,23 @@ public class GameStateManager : MonoBehaviour
     [Header("General")]
     public TMP_Text timerUI;
     public TMP_Text stateHeaderUI;
+    public TMP_Text stateControlsUI;
     private float currentTimer;
 
     [Header("Spawning State")]
     public string spawningHeaderString;
+    public string spawningControlsString;
     public float spawningTime;
 
     [Header("Racing State")]
     public string racingHeaderString;
+    public string racingControlsString;
+    public event Action onRacingBegin;
 
     [Header("Game Over State")]
     public string gameOverHeaderString;
     public float gameOverTime;
+    public event Action onGameOver;
 
     [Header("Transition State")]
     public string transitionHeaderString;
@@ -65,18 +71,24 @@ public class GameStateManager : MonoBehaviour
         {
             case GameState.SPAWNING:
                 stateHeaderUI.text = spawningHeaderString;
+                stateControlsUI.text = spawningControlsString;
                 currentTimer = spawningTime;
                 break;
             case GameState.RACING:
                 stateHeaderUI.text = racingHeaderString;
+                stateControlsUI.text = racingControlsString;
                 timerUI.text = " ";
+                onRacingBegin?.Invoke();
                 break;
             case GameState.GAME_OVER:
                 stateHeaderUI.text = gameOverHeaderString;
+                stateControlsUI.text = " ";
                 currentTimer = gameOverTime;
+                onGameOver?.Invoke();
                 break;
             case GameState.TRANSITION:
                 stateHeaderUI.text = transitionHeaderString;
+                stateControlsUI.text = " ";
                 currentTimer = transitionTime;
                 break;
             default:
