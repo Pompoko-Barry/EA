@@ -14,8 +14,11 @@ public class AnimatedRatController : MonoBehaviour
         sr = GetComponent<SpriteRenderer>();
         gsm = FindAnyObjectByType<GameStateManager>();
 
-        gsm.onRacingBegin += Run;
-        gsm.onGameOver += Idle;
+        if(gsm != null)
+        {
+            gsm.onRacingBegin += Run;
+            gsm.onGameOver += Idle;
+        }
         
         GiveRandomAppearance();
     }
@@ -41,7 +44,10 @@ public class AnimatedRatController : MonoBehaviour
 
     private void OnDisable()
     {
-        gsm.onRacingBegin -= Run;
-        gsm.onGameOver -= Idle;
+        if (gsm != null)
+        {
+            gsm.onRacingBegin -= Run;
+            gsm.onGameOver -= Idle;
+        }
     }
 }
