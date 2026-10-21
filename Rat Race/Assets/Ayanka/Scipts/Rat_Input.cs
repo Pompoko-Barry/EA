@@ -1,125 +1,318 @@
-using System.Collections;
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
+using System.Net.Sockets;
+using System.Threading;
+using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
-using System.Net.Sockets;
-using System.IO;
-using UnityEngine.SceneManagement;
-using TMPro;
 
+/// <summary>
+/// Rat Manager / Input.
+/// Connects to Twitch chat, reads commands, spawns one rat per chatter,
+/// and tells each rat what to do.
+///
+/// Commands (case-insensitive, must be the whole message):
+///   Go Faster : "r", "run", "1"
+///   Attack    : "a {username}", "attack {username}", "2 {username}"   (an @ before the name is fine)
+///   Defend    : "d", "defend", "3"
+///
+/// A chatter gets a rat the first time they send any valid command.
+/// </summary>
 public class Rat_Input : MonoBehaviour
 {
+    [Header("Twitch Login (fill these in the Inspector, not in code)")]
+    [Tooltip("Twitch username of the bot account.")]
+    [SerializeField] string user = "lost_my_bawls";
+    [Tooltip("OAuth token from twitchtokengenerator.com. Treat it like a password.")]
+    [SerializeField] string oauth = "85a3bvp34ri6tgd4hw5lqrgt8qd582";
+    [Tooltip("Channel to read chat from (your channel name).")]
+    [SerializeField] string channel = "lost_my_bawls";
+
+    [Header("Rats")]
+    [SerializeField] RatController ratPrefab;
+    [Tooltip("Where the first rat spawns. Each new rat spawns one lane below the last.")]
+    [SerializeField] Transform spawnPoint;
+    [SerializeField] float laneSpacing = 1.0f;
+    [Tooltip("After this many lanes, new rats wrap back to the top lane.")]
+    [SerializeField] int maxLanes = 10;
+
+    [Header("UI")]
     public TextMeshProUGUI recentCommandsText;
-    public UnityEvent<string, string> OnChatMessage;
+    [SerializeField] int recentCommandCount = 8;
 
-    [SerializeField] PlayerController playerController;
-
-    TcpClient Twitch;
-    StreamReader Reader;
-    StreamWriter Writer;
+    [Header("Events")]
+    public UnityEvent<string, string> OnChatMessage; // (chatter, message)
 
     const string URL = "irc.chat.twitch.tv";
     const int PORT = 6667;
+    const float ReconnectDelay = 5f;
 
-    //put your twitch username here - make a new account for security reasons. DO NOT PUBLISH YOUR CODE AS PUBLIC ON GITHUB.
-    string User = "Lost_My_Bawls";
+    // Connection
+    TcpClient twitch;
+    StreamReader reader;
+    StreamWriter writer;
+    readonly object writeLock = new object();
+    readonly ConcurrentQueue<string> incoming = new ConcurrentQueue<string>();
+    volatile bool connected;
+    int connectionId;
+    float reconnectTimer;
 
-    //copy and paste OAuth Access Token from     https://twitchtokengenerator.com
-    string OAuth = "oauth:pkgcr7pyhl4ougosb8vut02jyn2vch";  //your OAuth is basically as good as a password, so you SHOULD make a new account before doing this. I STRESS AGAIN, DO NOT SHARE THIS CODE.
-    //oh and, do NOT emit the "oauth:" at the beginning of this define. It should be string OAuth = "oauth: (paste your Oauth here)"; 
+    // Rats
+    readonly Dictionary<string, RatController> rats = new Dictionary<string, RatController>();
+    int nextLane;
 
-    //this is the channel you want to connect to, use your userid.
-    string Channel = "Lost_My_Bawls";
+    readonly List<string> recentCommands = new List<string>();
 
-    public float pingCounter;
+    static readonly HashSet<string> RunWords = new HashSet<string> { "r", "run", "1" };
+    static readonly HashSet<string> AttackWords = new HashSet<string> { "a", "attack", "2" };
+    static readonly HashSet<string> DefendWords = new HashSet<string> { "d", "defend", "3" };
 
-    private List<string> recentCommands = new List<string>();
-    private void Start()
-    {
-
-    }
-    private void ConnectToTwitch()
-    {
-        Twitch = new TcpClient(URL, PORT);
-        Reader = new StreamReader(Twitch.GetStream());
-        Writer = new StreamWriter(Twitch.GetStream());
-
-        Writer.WriteLine("PASS " + OAuth);
-        Writer.WriteLine("NICK " + User.ToLower()); //"NICK" = nickname
-        Writer.WriteLine("JOIN #" + Channel.ToLower());
-        Writer.Flush(); // sends all the stuff you wrote to the tcp so it actually connects
-    }
+    // Read-only access for other scripts (UI, leaderboard, finish line, etc.)
+    public IReadOnlyDictionary<string, RatController> Rats => rats;
 
     void Awake()
     {
-        ConnectToTwitch();
+        Connect();
     }
 
     void Update()
     {
-        pingCounter += Time.deltaTime;
-        if (pingCounter > 60)
+        // Chat lines are read on a background thread; handle them here on the main thread.
+        while (incoming.TryDequeue(out string line))
         {
-            Writer.WriteLine("PING " + URL);
-            Writer.Flush();
-            pingCounter = 0;
+            HandleLine(line);
         }
 
-        if (!Twitch.Connected)
+        if (!connected)
         {
-            ConnectToTwitch();
-        }
-
-        if (Twitch.Available > 0)
-        {
-            // Respond to server PINGs (critical)
-            // Typical form: "PING :tmi.twitch.tv"
-            //if (line.StartsWith("PING"))
-            //{
-            //    writer?.WriteLine(line.Replace("PING", "PONG"));
-            //    continue;
-            //}
-
-            Debug.Log("Twitch is Available");
-            //if something is available in the TCP that we can grab with the stream reader
-            string message = Reader.ReadLine(); //reads the next available line in our TCP
-
-            if (message.Contains("PRIVMSG"))    //code that will come with any message that's written by a user
+            reconnectTimer += Time.deltaTime;
+            if (reconnectTimer >= ReconnectDelay)
             {
-
-
-                int splitPoint = message.IndexOf("!");  //notice the '!' in front of the message - we can use this '!' to isolate the username, emphsising on could because I didn't use it.
-                string chatter = message.Substring(1, splitPoint - 1);  //extracts the first word...
-                                                                        //aka the person speaking
-
-                splitPoint = message.IndexOf(":", 1);   //so everything after that colon is the message that the user typed... in this case, 'hello world'
-                string msg = message.Substring(splitPoint + 1);    //anything that's passed that colon, bring it in to that string
-
-                //This UnityEvent is what will look at the messager, and their message - then it will invoke a method from another script that we assign! 
-                //You can assign the method it invokes in the inspector.
-                OnChatMessage?.Invoke(chatter, msg);
-                print(msg);
-
-                //This part is where script reads twitch chat msgs and compare them to your trigger words
-                if (msg == "w" || msg == "W" || msg == "UP" || msg == "up" || msg == "Up" ||
-                    msg == "q" || msg == "Q" || msg == "e" || msg == "E" ||
-                    msg == "r" || msg == "R" || msg == "t" || msg == "T" || msg == "y" || msg == "Y")
-                {
-                    Debug.Log("UP Registered");
-                    playerController.GoUP();
-                    //call your keyword method here!
-                }
-                if (msg == "s" || msg == "S" || msg == "DOWN" || msg == "down" || msg == "Down" ||
-                    msg == "a" || msg == "A" || msg == "d" || msg == "D" ||
-                    msg == "f" || msg == "F" || msg == "g" || msg == "G" || msg == "h" || msg == "H")
-                {
-                    Debug.Log("Down Registered");
-                    playerController.GoDown();
-                    //call your keyword method here!
-                }
-
+                reconnectTimer = 0f;
+                Debug.Log("[Rat_Input] Reconnecting to Twitch...");
+                Connect();
             }
         }
+    }
+
+    void OnDestroy()
+    {
+        Disconnect();
+    }
+
+    // ---------------------------------------------------------------------
+    // Twitch connection
+    // ---------------------------------------------------------------------
+
+    void Connect()
+    {
+        Disconnect();
+
+        if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(oauth) || string.IsNullOrEmpty(channel))
+        {
+            Debug.LogError("[Rat_Input] Fill in user, oauth and channel in the Inspector.");
+            reconnectTimer = -999f; // don't spam reconnects until fixed
+            return;
+        }
+
+        try
+        {
+            twitch = new TcpClient(URL, PORT);
+            NetworkStream stream = twitch.GetStream();
+            reader = new StreamReader(stream);
+            writer = new StreamWriter(stream) { NewLine = "\r\n", AutoFlush = true };
+
+            string pass = oauth.StartsWith("oauth:") ? oauth : "oauth:" + oauth;
+            Send("PASS " + pass);
+            Send("NICK " + user.ToLower());
+            Send("JOIN #" + channel.ToLower());
+
+            connected = true;
+            int myId = ++connectionId;
+            StreamReader myReader = reader;
+            Thread readThread = new Thread(() => ReadLoop(myReader, myId)) { IsBackground = true };
+            readThread.Start();
+
+            Debug.Log("[Rat_Input] Connected to Twitch chat #" + channel.ToLower());
+        }
+        catch (Exception e)
+        {
+            Debug.LogWarning("[Rat_Input] Could not connect: " + e.Message);
+            connected = false;
+        }
+    }
+
+    void Disconnect()
+    {
+        connected = false;
+        connectionId++; // stops any old read thread from touching state
+        try { twitch?.Close(); } catch { }
+        twitch = null;
+        reader = null;
+        writer = null;
+    }
+
+    // Runs on a background thread so ReadLine never freezes the game.
+    void ReadLoop(StreamReader r, int id)
+    {
+        try
+        {
+            while (id == connectionId)
+            {
+                string line = r.ReadLine();
+                if (line == null) break; // server closed the connection
+
+                // Twitch pings about every 5 minutes. We MUST answer or we get kicked.
+                if (line.StartsWith("PING"))
+                {
+                    Send("PONG" + line.Substring(4));
+                    continue;
+                }
+
+                incoming.Enqueue(line);
+            }
+        }
+        catch (Exception)
+        {
+            // Socket closed or errored, fall through to mark disconnected.
+        }
+
+        if (id == connectionId) connected = false;
+    }
+
+    void Send(string text)
+    {
+        lock (writeLock)
+        {
+            try { writer?.WriteLine(text); }
+            catch (Exception) { connected = false; }
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // Chat parsing
+    // ---------------------------------------------------------------------
+
+    // Typical line: ":someuser!someuser@someuser.tmi.twitch.tv PRIVMSG #channel :attack bob"
+    void HandleLine(string line)
+    {
+        if (line.Contains("Login authentication failed") || line.Contains("Improperly formatted auth"))
+        {
+            Debug.LogError("[Rat_Input] Twitch rejected the login. Check your OAuth token and username.");
+            return;
+        }
+
+        if (line.Contains(" RECONNECT"))
+        {
+            connected = false; // Update() will reconnect
+            return;
+        }
+
+        int privIndex = line.IndexOf(" PRIVMSG ", StringComparison.Ordinal);
+        if (privIndex < 0) return;
+
+        int bang = line.IndexOf('!');
+        if (bang < 2 || bang > privIndex) return;
+        string chatter = line.Substring(1, bang - 1).ToLower();
+
+        int msgStart = line.IndexOf(" :", privIndex, StringComparison.Ordinal);
+        if (msgStart < 0) return;
+        string msg = line.Substring(msgStart + 2).Trim();
+
+        OnChatMessage?.Invoke(chatter, msg);
+        HandleCommand(chatter, msg);
+    }
+
+    void HandleCommand(string chatter, string msg)
+    {
+        string[] parts = msg.ToLower().Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0) return;
+
+        string cmd = parts[0];
+
+        // 1. Go Faster
+        if (RunWords.Contains(cmd) && parts.Length == 1)
+        {
+            RatController rat = GetOrSpawnRat(chatter);
+            if (rat != null && rat.GoFaster())
+                LogCommand(chatter + " RUNS!");
+            return;
+        }
+
+        // 2. Attack {username}
+        if (AttackWords.Contains(cmd) && parts.Length >= 2)
+        {
+            string targetName = parts[1].TrimStart('@');
+            if (targetName == chatter) return;
+
+            if (!rats.TryGetValue(targetName, out RatController target) || target == null)
+                return; // no rat with that name
+
+            RatController rat = GetOrSpawnRat(chatter);
+            if (rat == null) return;
+
+            if (rat.Attack(target, out bool landed))
+                LogCommand(landed
+                    ? chatter + " stunned " + targetName + "!"
+                    : chatter + " attacked " + targetName + " (blocked)");
+            return;
+        }
+
+        // 3. Defend
+        if (DefendWords.Contains(cmd) && parts.Length == 1)
+        {
+            RatController rat = GetOrSpawnRat(chatter);
+            if (rat != null && rat.Defend())
+                LogCommand(chatter + " defends");
+        }
+    }
+
+    // ---------------------------------------------------------------------
+    // Rats
+    // ---------------------------------------------------------------------
+
+    RatController GetOrSpawnRat(string username)
+    {
+        if (rats.TryGetValue(username, out RatController existing))
+        {
+            if (existing != null) return existing;
+            rats.Remove(username); // rat was destroyed somewhere else
+        }
+
+        if (ratPrefab == null)
+        {
+            Debug.LogError("[Rat_Input] No ratPrefab assigned.");
+            return null;
+        }
+
+        Vector3 origin = spawnPoint != null ? spawnPoint.position : transform.position;
+        int lane = nextLane % Mathf.Max(1, maxLanes);
+        nextLane++;
+        Vector3 pos = origin + Vector3.down * laneSpacing * lane;
+
+        RatController rat = Instantiate(ratPrefab, pos, Quaternion.identity);
+        rat.Init(username);
+        rats[username] = rat;
+
+        LogCommand(username + " joined the race!");
+        return rat;
+    }
+
+    public RatController GetRat(string username)
+    {
+        rats.TryGetValue(username.ToLower(), out RatController rat);
+        return rat;
+    }
+
+    void LogCommand(string text)
+    {
+        recentCommands.Add(text);
+        while (recentCommands.Count > recentCommandCount)
+            recentCommands.RemoveAt(0);
+
+        if (recentCommandsText != null)
+            recentCommandsText.text = string.Join("\n", recentCommands);
     }
 }
