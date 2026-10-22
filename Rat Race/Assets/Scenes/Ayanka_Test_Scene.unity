@@ -5151,8 +5151,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Twitch Chat
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 044253030ee0643feba002b1102d53d4, type: 2}
+  m_sharedMaterial: {fileID: -2158858846658887933, guid: 044253030ee0643feba002b1102d53d4, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -5484,8 +5484,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: Waiting for Players...
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 044253030ee0643feba002b1102d53d4, type: 2}
+  m_sharedMaterial: {fileID: -2158858846658887933, guid: 044253030ee0643feba002b1102d53d4, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -5780,8 +5780,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 99:99
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 044253030ee0643feba002b1102d53d4, type: 2}
+  m_sharedMaterial: {fileID: -2158858846658887933, guid: 044253030ee0643feba002b1102d53d4, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -5893,7 +5893,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 19.02}
-  m_SizeDelta: {x: 1325.132, y: 745.394}
+  m_SizeDelta: {x: 1403.7076, y: 745.394}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &656569097
 MonoBehaviour:
@@ -10930,7 +10930,7 @@ Transform:
   m_GameObject: {fileID: 917740774}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -9.03, y: 0, z: 0}
+  m_LocalPosition: {x: -15.29, y: 9.34, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -11219,6 +11219,7 @@ MonoBehaviour:
   timerUI: {fileID: 650351773}
   stateHeaderUI: {fileID: 294414977}
   stateControlsUI: {fileID: 1559065280}
+  ratManager: {fileID: 1166363241}
   spawningHeaderString: Waiting for Players...
   spawningControlsString: '<b>Controls:</b> Join Game [ j, join ]'
   spawningTime: 10
@@ -11264,8 +11265,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RatManager
   ratPrefab: {fileID: 8856555730896233662, guid: 73bdbb0c17206414c8b68000b0722ec4, type: 3}
   spawnPoint: {fileID: 917740775}
-  laneSpacing: 1
-  maxLanes: 10
+  laneSpacing: 2
+  maxLanes: 69
   maxRats: 0
   removeIdleAfter: 0
   requireJoinCommand: 0
@@ -11293,7 +11294,7 @@ MonoBehaviour:
   offlineMode: 1
   ratManager: {fileID: 1166363241}
   recentCommandsText: {fileID: 0}
-  recentCommandCount: 8
+  recentCommandCount: 0
   OnChatMessage:
     m_PersistentCalls:
       m_Calls: []
@@ -16417,8 +16418,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: 'Controls: '
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 044253030ee0643feba002b1102d53d4, type: 2}
+  m_sharedMaterial: {fileID: -2158858846658887933, guid: 044253030ee0643feba002b1102d53d4, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -16848,7 +16849,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 1}
+  m_BackGroundColor: {r: 0.2264151, g: 0.2264151, b: 0.2264151, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0

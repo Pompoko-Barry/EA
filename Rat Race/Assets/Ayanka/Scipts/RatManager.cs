@@ -18,7 +18,7 @@ public class RatManager : MonoBehaviour
     [SerializeField] RatController ratPrefab;
     [Tooltip("Where lane 0 is. Each next lane is placed below it.")]
     [SerializeField] Transform spawnPoint;
-    [SerializeField] float laneSpacing = 2.0f;
+    [SerializeField] float laneSpacing = 25.0f;
     [Tooltip("How many lanes fit on the track. When all are full, rats share lanes.")]
     [SerializeField] int maxLanes = 10;
 
