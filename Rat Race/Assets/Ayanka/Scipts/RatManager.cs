@@ -69,11 +69,11 @@ public class RatManager : MonoBehaviour
     // Getting / spawning rats
     // ---------------------------------------------------------------------
 
-    public void ActivateRats()
+    public void ActivateRats(bool activate)
     {
         foreach (var (user,rat) in rats)
         {
-            rat.rat.isActive = true;
+            rat.rat.isActive = activate;
         }
     }
 

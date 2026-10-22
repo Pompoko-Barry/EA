@@ -131,13 +131,14 @@ public class GameStateManager : MonoBehaviour
                 stateControlsUI.text = racingControlsString;
                 timerUI.text = " ";
                 onRacingBegin?.Invoke();
-                //ratManager.ActivateRats();
+                ratManager.ActivateRats(true);
                 break;
             case GameState.GAME_OVER:
                 stateHeaderUI.text = gameOverHeaderString;
                 stateControlsUI.text = " ";
                 currentTimer = gameOverTime;
                 onGameOver?.Invoke();
+                ratManager.ActivateRats(false);
                 break;
             case GameState.TRANSITION:
                 stateHeaderUI.text = transitionHeaderString;
