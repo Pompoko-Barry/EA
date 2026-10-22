@@ -29,6 +29,11 @@ public class GameStateManager : MonoBehaviour
     public string gameOverHeaderString;
     public float gameOverTime;
     public event Action onGameOver;
+    public Transform winnerLocation;
+    public float timeToMoveToWinnerLoc;
+    public float timeToTurnOnSpotlight;
+    public GameObject spotlightPanel;
+    public GameObject blackPanel;
 
     [Header("Transition State")]
     public string transitionHeaderString;
@@ -37,6 +42,9 @@ public class GameStateManager : MonoBehaviour
 
     void Start()
     {
+        spotlightPanel.SetActive(false);
+        blackPanel.SetActive(false);
+
         SetState(GameState.SPAWNING);
     }
 
@@ -62,9 +70,49 @@ public class GameStateManager : MonoBehaviour
         }
     }
 
+    public void ThisRatWins(GameObject ratThatWon)
+    {
+        //ratThatWon.GetComponentInChildren<AnimatedRatController>().Idle();
+
+        SetState(GameState.GAME_OVER);
+        StartCoroutine(CelebrateWinningRat(ratThatWon));
+    }
+
+    IEnumerator CelebrateWinningRat(GameObject ratThatWon)
+    {
+        blackPanel.SetActive(true);
+
+        Vector2 startPos = ratThatWon.transform.position;
+        Vector3 startSize = ratThatWon.transform.localScale;
+
+        float timer = 0f;
+        while(timer < timeToMoveToWinnerLoc)
+        {
+            yield return null;
+
+            timer += Time.deltaTime;
+
+            ratThatWon.transform.position = Vector2.Lerp(startPos, winnerLocation.position, timer / timeToMoveToWinnerLoc);
+            ratThatWon.transform.localScale = Vector3.Lerp(startSize, winnerLocation.localScale, timer / timeToMoveToWinnerLoc);
+        }
+
+        ratThatWon.transform.position = winnerLocation.position;
+        ratThatWon.transform.localScale = winnerLocation.localScale;
+
+        yield return new WaitForSeconds(timeToTurnOnSpotlight);
+
+        blackPanel.SetActive(false);
+        spotlightPanel.SetActive(true);
+    }
+
     // use this to set the game state
     public void SetState(GameState state)
     {
+        if (_state == GameState.GAME_OVER)
+        {
+            spotlightPanel.SetActive(false);
+        }
+
         _state = state;
 
         switch (_state)
