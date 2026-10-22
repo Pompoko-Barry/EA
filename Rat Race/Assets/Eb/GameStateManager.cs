@@ -14,6 +14,7 @@ public class GameStateManager : MonoBehaviour
     public TMP_Text stateHeaderUI;
     public TMP_Text stateControlsUI;
     private float currentTimer;
+    public RatManager ratManager;
 
     [Header("Spawning State")]
     public string spawningHeaderString;
@@ -113,6 +114,7 @@ public class GameStateManager : MonoBehaviour
         if (_state == GameState.GAME_OVER)
         {
             spotlightPanel.SetActive(false);
+            ratManager.ClearAllRats();
         }
 
         _state = state;
@@ -129,6 +131,7 @@ public class GameStateManager : MonoBehaviour
                 stateControlsUI.text = racingControlsString;
                 timerUI.text = " ";
                 onRacingBegin?.Invoke();
+                //ratManager.ActivateRats();
                 break;
             case GameState.GAME_OVER:
                 stateHeaderUI.text = gameOverHeaderString;
