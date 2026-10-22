@@ -11283,7 +11283,7 @@ MonoBehaviour:
   ratManager: {fileID: 1166363241}
   spawningHeaderString: Waiting for Players...
   spawningControlsString: '<b>Controls:</b> Join Game [ j, join ]'
-  spawningTime: 10
+  spawningTime: 25
   racingHeaderString: Go!
   racingControlsString: '<b>Controls:</b> Run Fast [ r, run, 1 ] Defend Self [ d,
     defend, 3 ] \nAttack Player [ a username, attack username, 2 username ]'
