@@ -26,7 +26,7 @@ public class Rat_Input : MonoBehaviour
     [Tooltip("Twitch username of the bot account.")]
     [SerializeField] string user = "lost_my_bawls";
     [Tooltip("OAuth token from twitchtokengenerator.com. Treat it like a password.")]
-    [SerializeField] string oauth = "85a3bvp34ri6tgd4hw5lqrgt8qd582";
+    [SerializeField] string oauth = "gr7quhd0qivlnffsg3mm6zxlaeqkxm2";
     [Tooltip("Channel to read chat from (your channel name).")]
     [SerializeField] string channel = "lost_my_bawls";
 
@@ -136,6 +136,7 @@ public class Rat_Input : MonoBehaviour
             readThread.Start();
 
             Debug.Log("[Rat_Input] Connected to Twitch chat #" + channel.ToLower());
+            
         }
         catch (Exception e)
         {
