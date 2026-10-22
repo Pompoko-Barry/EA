@@ -9,16 +9,15 @@ using UnityEngine;
 using UnityEngine.Events;
 
 /// <summary>
-/// Rat Manager / Input.
-/// Connects to Twitch chat, reads commands, spawns one rat per chatter,
-/// and tells each rat what to do.
+/// Rat Input.
+/// Connects to Twitch chat, reads commands, and tells the right rat what to do.
+/// Spawning and tracking rats is handled by RatManager.
 ///
 /// Commands (case-insensitive, must be the whole message):
+///   Join      : "join", "!join"   (only needed if RatManager has Require Join Command on)
 ///   Go Faster : "r", "run", "1"
 ///   Attack    : "a {username}", "attack {username}", "2 {username}"   (an @ before the name is fine)
 ///   Defend    : "d", "defend", "3"
-///
-/// A chatter gets a rat the first time they send any valid command.
 /// </summary>
 public class Rat_Input : MonoBehaviour
 {
@@ -26,17 +25,17 @@ public class Rat_Input : MonoBehaviour
     [Tooltip("Twitch username of the bot account.")]
     [SerializeField] string user = "lost_my_bawls";
     [Tooltip("OAuth token from twitchtokengenerator.com. Treat it like a password.")]
-    [SerializeField] string oauth = "gr7quhd0qivlnffsg3mm6zxlaeqkxm2";
+    [SerializeField] string oauth = "dxvhnh1asokl1u40f1w66edouke1q5";
     [Tooltip("Channel to read chat from (your channel name).")]
     [SerializeField] string channel = "lost_my_bawls";
 
+    [Header("Testing")]
+    [Tooltip("Tick this to test without Twitch. Use RatTester to send fake chat messages.")]
+    [SerializeField] bool offlineMode = false;
+
     [Header("Rats")]
-    [SerializeField] RatController ratPrefab;
-    [Tooltip("Where the first rat spawns. Each new rat spawns one lane below the last.")]
-    [SerializeField] Transform spawnPoint;
-    [SerializeField] float laneSpacing = 1.0f;
-    [Tooltip("After this many lanes, new rats wrap back to the top lane.")]
-    [SerializeField] int maxLanes = 10;
+    [Tooltip("The RatManager in the scene. If empty, looks on this same GameObject.")]
+    [SerializeField] RatManager ratManager;
 
     [Header("UI")]
     public TextMeshProUGUI recentCommandsText;
@@ -59,22 +58,34 @@ public class Rat_Input : MonoBehaviour
     int connectionId;
     float reconnectTimer;
 
-    // Rats
-    readonly Dictionary<string, RatController> rats = new Dictionary<string, RatController>();
-    int nextLane;
-
     readonly List<string> recentCommands = new List<string>();
 
+    static readonly HashSet<string> JoinWords = new HashSet<string> { "join", "!join" };
     static readonly HashSet<string> RunWords = new HashSet<string> { "r", "run", "1" };
     static readonly HashSet<string> AttackWords = new HashSet<string> { "a", "attack", "2" };
     static readonly HashSet<string> DefendWords = new HashSet<string> { "d", "defend", "3" };
 
-    // Read-only access for other scripts (UI, leaderboard, finish line, etc.)
-    public IReadOnlyDictionary<string, RatController> Rats => rats;
-
     void Awake()
     {
-        Connect();
+        if (ratManager == null) ratManager = GetComponent<RatManager>();
+        if (ratManager == null)
+            Debug.LogError("[Rat_Input] No RatManager assigned. Drag your RatManager object into the Rat Manager box.");
+
+        if (offlineMode)
+            Debug.Log("[Rat_Input] Offline Mode is on: not connecting to Twitch.");
+        else
+            Connect();
+    }
+
+    /// Pretend a viewer typed a message in chat. Used by RatTester.
+    public void SimulateChat(string chatter, string msg)
+    {
+        if (string.IsNullOrWhiteSpace(chatter) || string.IsNullOrWhiteSpace(msg)) return;
+        chatter = chatter.Trim().ToLower();
+        msg = msg.Trim();
+
+        OnChatMessage?.Invoke(chatter, msg);
+        HandleCommand(chatter, msg);
     }
 
     void Update()
@@ -85,7 +96,7 @@ public class Rat_Input : MonoBehaviour
             HandleLine(line);
         }
 
-        if (!connected)
+        if (!connected && !offlineMode)
         {
             reconnectTimer += Time.deltaTime;
             if (reconnectTimer >= ReconnectDelay)
@@ -136,7 +147,6 @@ public class Rat_Input : MonoBehaviour
             readThread.Start();
 
             Debug.Log("[Rat_Input] Connected to Twitch chat #" + channel.ToLower());
-            
         }
         catch (Exception e)
         {
@@ -228,15 +238,26 @@ public class Rat_Input : MonoBehaviour
 
     void HandleCommand(string chatter, string msg)
     {
+        if (ratManager == null) return;
+
         string[] parts = msg.ToLower().Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 0) return;
 
         string cmd = parts[0];
 
+        // Join
+        if (JoinWords.Contains(cmd) && parts.Length == 1)
+        {
+            GetRatFor(chatter, allowSpawn: true);
+            return;
+        }
+
+        bool canSpawn = !ratManager.RequireJoinCommand;
+
         // 1. Go Faster
         if (RunWords.Contains(cmd) && parts.Length == 1)
         {
-            RatController rat = GetOrSpawnRat(chatter);
+            RatController rat = GetRatFor(chatter, canSpawn);
             if (rat != null && rat.GoFaster())
                 LogCommand(chatter + " RUNS!");
             return;
@@ -248,10 +269,10 @@ public class Rat_Input : MonoBehaviour
             string targetName = parts[1].TrimStart('@');
             if (targetName == chatter) return;
 
-            if (!rats.TryGetValue(targetName, out RatController target) || target == null)
-                return; // no rat with that name
+            RatController target = ratManager.GetRat(targetName);
+            if (target == null) return; // no rat with that name
 
-            RatController rat = GetOrSpawnRat(chatter);
+            RatController rat = GetRatFor(chatter, canSpawn);
             if (rat == null) return;
 
             if (rat.Attack(target, out bool landed))
@@ -264,47 +285,26 @@ public class Rat_Input : MonoBehaviour
         // 3. Defend
         if (DefendWords.Contains(cmd) && parts.Length == 1)
         {
-            RatController rat = GetOrSpawnRat(chatter);
+            RatController rat = GetRatFor(chatter, canSpawn);
             if (rat != null && rat.Defend())
                 LogCommand(chatter + " defends");
         }
     }
 
-    // ---------------------------------------------------------------------
-    // Rats
-    // ---------------------------------------------------------------------
-
-    RatController GetOrSpawnRat(string username)
+    // Gets the chatter's rat. If they don't have one and allowSpawn is true,
+    // asks RatManager to spawn one.
+    RatController GetRatFor(string chatter, bool allowSpawn)
     {
-        if (rats.TryGetValue(username, out RatController existing))
+        if (!allowSpawn)
         {
-            if (existing != null) return existing;
-            rats.Remove(username); // rat was destroyed somewhere else
+            RatController rat = ratManager.GetRat(chatter);
+            if (rat != null) ratManager.MarkActive(chatter);
+            return rat;
         }
 
-        if (ratPrefab == null)
-        {
-            Debug.LogError("[Rat_Input] No ratPrefab assigned.");
-            return null;
-        }
-
-        Vector3 origin = spawnPoint != null ? spawnPoint.position : transform.position;
-        int lane = nextLane % Mathf.Max(1, maxLanes);
-        nextLane++;
-        Vector3 pos = origin + Vector3.down * laneSpacing * lane;
-
-        RatController rat = Instantiate(ratPrefab, pos, Quaternion.identity);
-        rat.Init(username);
-        rats[username] = rat;
-
-        LogCommand(username + " joined the race!");
-        return rat;
-    }
-
-    public RatController GetRat(string username)
-    {
-        rats.TryGetValue(username.ToLower(), out RatController rat);
-        return rat;
+        RatController r = ratManager.GetOrSpawnRat(chatter, out bool isNew);
+        if (isNew) LogCommand(chatter + " joined the race!");
+        return r;
     }
 
     void LogCommand(string text)
