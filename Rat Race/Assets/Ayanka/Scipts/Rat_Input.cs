@@ -60,10 +60,10 @@ public class Rat_Input : MonoBehaviour
 
     readonly List<string> recentCommands = new List<string>();
 
-    static readonly HashSet<string> JoinWords = new HashSet<string> { "join", "!join" };
-    static readonly HashSet<string> RunWords = new HashSet<string> { "r", "run", "1" };
-    static readonly HashSet<string> AttackWords = new HashSet<string> { "a", "attack", "2" };
-    static readonly HashSet<string> DefendWords = new HashSet<string> { "d", "defend", "3" };
+    static readonly HashSet<string> JoinWords = new HashSet<string> { "join", "!join", "j", "JOIN", "J" };
+    static readonly HashSet<string> RunWords = new HashSet<string> { "r", "run", "1", "R", "RUN", "FAST", "BOOST" };
+    static readonly HashSet<string> AttackWords = new HashSet<string> { "a", "attack", "2", "A", "ATTACK", "attak", "atack"};
+    static readonly HashSet<string> DefendWords = new HashSet<string> { "d", "defend", "3", "D", "DEFEND", "defen", "defends" };
 
     void Awake()
     {
