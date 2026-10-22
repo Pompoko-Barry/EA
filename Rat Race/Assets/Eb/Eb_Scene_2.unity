@@ -311,8 +311,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 69256074}
   m_HandleRect: {fileID: 684347935}
   m_Direction: 2
-  m_Value: 0
-  m_Size: 1
+  m_Value: 1.0000013
+  m_Size: 0.84584063
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -720,7 +720,7 @@ MonoBehaviour:
   user: lost_my_bawls
   oauth: dxvhnh1asokl1u40f1w66edouke1q5
   channel: lost_my_bawls
-  offlineMode: 1
+  offlineMode: 0
   ratManager: {fileID: 187558749}
   finishLine: {fileID: 373428330}
   recentCommandsText: {fileID: 0}
@@ -2838,7 +2838,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 710, y: -260}
+  m_AnchoredPosition: {x: 710, y: -189}
   m_SizeDelta: {x: 344.0898, y: 439.6917}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1281696119
@@ -13736,7 +13736,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 642.52, y: -573.95}
+  m_AnchoredPosition: {x: 642.52, y: -490.31}
   m_SizeDelta: {x: 634.9632, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2125270960
