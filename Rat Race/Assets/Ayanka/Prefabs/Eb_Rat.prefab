@@ -147,6 +147,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5524457058881204209}
   - component: {fileID: 8856555730896233662}
+  - component: {fileID: 1107866413980228653}
   m_Layer: 0
   m_Name: Eb_Rat
   m_TagString: Untagged
@@ -216,6 +217,45 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   isActive: 0
+<<<<<<< HEAD
+=======
+--- !u!58 &1107866413980228653
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6145082709354785887}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 1.62
+>>>>>>> c21672a27ce5977fdceefcd355c7787d96ce4227
 --- !u!1 &6801183851417230997
 GameObject:
   m_ObjectHideFlags: 0
