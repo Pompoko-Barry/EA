@@ -34,6 +34,7 @@ public class GameStateManager : MonoBehaviour
     public float timeToTurnOnSpotlight;
     public GameObject spotlightPanel;
     public GameObject blackPanel;
+    public ParticleSystem confetti;
 
     [Header("Transition State")]
     public string transitionHeaderString;
@@ -103,6 +104,7 @@ public class GameStateManager : MonoBehaviour
 
         blackPanel.SetActive(false);
         spotlightPanel.SetActive(true);
+        confetti.Play();
     }
 
     // use this to set the game state
