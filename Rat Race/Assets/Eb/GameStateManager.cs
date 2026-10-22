@@ -12,7 +12,7 @@ public class GameStateManager : MonoBehaviour
     [Header("General")]
     public TMP_Text timerUI;
     public TMP_Text stateHeaderUI;
-    public TMP_Text stateControlsUI;
+    //public TMP_Text stateControlsUI;
     private float currentTimer;
     public RatManager ratManager;
 
@@ -123,26 +123,26 @@ public class GameStateManager : MonoBehaviour
         {
             case GameState.SPAWNING:
                 stateHeaderUI.text = spawningHeaderString;
-                stateControlsUI.text = spawningControlsString;
+                //stateControlsUI.text = spawningControlsString;
                 currentTimer = spawningTime;
                 break;
             case GameState.RACING:
                 stateHeaderUI.text = racingHeaderString;
-                stateControlsUI.text = racingControlsString;
+                //stateControlsUI.text = racingControlsString;
                 timerUI.text = " ";
                 onRacingBegin?.Invoke();
                 ratManager.ActivateRats(true);
                 break;
             case GameState.GAME_OVER:
                 stateHeaderUI.text = gameOverHeaderString;
-                stateControlsUI.text = " ";
+                //stateControlsUI.text = " ";
                 currentTimer = gameOverTime;
                 onGameOver?.Invoke();
                 ratManager.ActivateRats(false);
                 break;
             case GameState.TRANSITION:
                 stateHeaderUI.text = transitionHeaderString;
-                stateControlsUI.text = " ";
+                //stateControlsUI.text = " ";
                 currentTimer = transitionTime;
                 break;
             default:

@@ -7,6 +7,7 @@ using System.Threading;
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 /// <summary>
 /// Rat Input.
@@ -67,6 +68,12 @@ public class Rat_Input : MonoBehaviour
     static readonly HashSet<string> RunWords = new HashSet<string> { "r", "run", "1", "R", "RUN", "FAST", "BOOST" };
     static readonly HashSet<string> AttackWords = new HashSet<string> { "a", "attack", "2", "A", "ATTACK", "attak", "atack"};
     static readonly HashSet<string> DefendWords = new HashSet<string> { "d", "defend", "3", "D", "DEFEND", "defen", "defends" };
+
+    // eb adding things 
+    public Transform recentCommandsArea;
+    public GameObject recentCommandPrefab;
+    public ScrollRect chatScroll;
+    public Color joinColor, runColor, attackColor, defendColor;
 
    void Awake()
     {
@@ -252,6 +259,7 @@ public class Rat_Input : MonoBehaviour
         if (JoinWords.Contains(cmd) && parts.Length == 1)
         {
             GetRatFor(chatter, allowSpawn: true);
+            PrintValidCommand(chatter, msg, joinColor);
             return;
         }
  
@@ -263,6 +271,7 @@ public class Rat_Input : MonoBehaviour
             RatController rat = GetRatFor(chatter, canSpawn);
             if (rat != null && rat.GoFaster())
                 LogCommand(chatter + " RUNS!");
+                PrintValidCommand(chatter, msg, runColor);
             return;
         }
  
@@ -287,6 +296,7 @@ public class Rat_Input : MonoBehaviour
                 LogCommand(landed
                     ? chatter + " stunned " + target.Username + "!"
                     : chatter + " attacked " + target.Username + " (blocked)");
+            PrintValidCommand(chatter, msg, attackColor);
             return;
         }
  
@@ -296,7 +306,21 @@ public class Rat_Input : MonoBehaviour
             RatController rat = GetRatFor(chatter, canSpawn);
             if (rat != null && rat.Defend())
                 LogCommand(chatter + " defends");
+                PrintValidCommand(chatter, msg, defendColor);
         }
+    }
+
+    // prints the recent valid commands to the screen
+    private void PrintValidCommand(string chatter, string command, Color textColor)
+    {
+        // spawn text object
+        GameObject printedCommand = Instantiate(recentCommandPrefab, recentCommandsArea);
+        TMP_Text printedCommandText = printedCommand.GetComponent<TMP_Text>();
+        printedCommandText.color = textColor;
+        printedCommandText.text = $"{chatter}: {command}";
+        // simulate scroll
+        chatScroll.verticalNormalizedPosition = 0f;
+        Canvas.ForceUpdateCanvases();
     }
  
     // Gets the chatter's rat. If they don't have one and allowSpawn is true,

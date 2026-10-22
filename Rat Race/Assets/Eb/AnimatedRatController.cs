@@ -28,8 +28,8 @@ public class AnimatedRatController : MonoBehaviour
         int randSprite = Random.Range(0, possibleSprites.Length);
         sr.sprite = possibleSprites[randSprite];
 
-        int randColor = Random.Range(0, possibleColors.Length);
-        sr.color = possibleColors[randColor];
+        //int randColor = Random.Range(0, possibleColors.Length);
+        //sr.color = possibleColors[randColor];
     }
 
     public void Idle()
