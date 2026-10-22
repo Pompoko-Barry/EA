@@ -5580,7 +5580,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &484004064
 RectTransform:
   m_ObjectHideFlags: 0
@@ -5598,7 +5598,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 321.9, y: 226}
+  m_AnchoredPosition: {x: -239, y: 20}
   m_SizeDelta: {x: 700, y: 700}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &484004065
@@ -11327,8 +11327,8 @@ MonoBehaviour:
   ratPrefab: {fileID: 8856555730896233662, guid: 73bdbb0c17206414c8b68000b0722ec4, type: 3}
   spawnPoint: {fileID: 917740775}
   laneSpacing: 2
-  maxLanes: 69
-  maxRats: 0
+  maxLanes: 10
+  maxRats: 10
   removeIdleAfter: 0
   requireJoinCommand: 0
   OnRatSpawned:
@@ -11352,7 +11352,7 @@ MonoBehaviour:
   user: lost_my_bawls
   oauth: dxvhnh1asokl1u40f1w66edouke1q5
   channel: lost_my_bawls
-  offlineMode: 1
+  offlineMode: 0
   ratManager: {fileID: 1166363241}
   recentCommandsText: {fileID: 0}
   recentCommandCount: 0
