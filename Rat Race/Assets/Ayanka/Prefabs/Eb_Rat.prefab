@@ -183,14 +183,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1f70ce5f3523415d983cbbc9e3f3214, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RatController
-  baseSpeed: 1
-  boostSpeed: 4
+  baseSpeed: 0.5
+  boostSpeed: 3
   boostDuration: 1
   boostCooldown: 3
   attackRange: 0
   attackDuration: 0.75
   stunDuration: 2
-  attackCooldown: 4
+  attackCooldown: 3
   defendDuration: 2
   defendCooldown: 5
   vulnerableStunMultiplier: 1.5
