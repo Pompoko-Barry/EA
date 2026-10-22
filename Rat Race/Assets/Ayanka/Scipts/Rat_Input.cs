@@ -16,7 +16,7 @@ using UnityEngine.Events;
 /// Commands (case-insensitive, must be the whole message):
 ///   Join      : "join", "!join"   (only needed if RatManager has Require Join Command on)
 ///   Go Faster : "r", "run", "1"
-///   Attack    : "a {username}", "attack {username}", "2 {username}"   (an @ before the name is fine)
+///   Attack    : "a", "attack ", "2"   (
 ///   Defend    : "d", "defend", "3"
 /// </summary>
 public class Rat_Input : MonoBehaviour
@@ -35,7 +35,10 @@ public class Rat_Input : MonoBehaviour
 
     [Header("Rats")]
     [Tooltip("The RatManager in the scene. If empty, looks on this same GameObject.")]
+
     [SerializeField] RatManager ratManager;
+    [Tooltip("The finish line object. Attacks target the rat closest to it on the x-axis.")]  
+    public Transform finishLine;                                                     
 
     [Header("UI")]
     public TextMeshProUGUI recentCommandsText;
@@ -65,29 +68,29 @@ public class Rat_Input : MonoBehaviour
     static readonly HashSet<string> AttackWords = new HashSet<string> { "a", "attack", "2", "A", "ATTACK", "attak", "atack"};
     static readonly HashSet<string> DefendWords = new HashSet<string> { "d", "defend", "3", "D", "DEFEND", "defen", "defends" };
 
-    void Awake()
+   void Awake()
     {
         if (ratManager == null) ratManager = GetComponent<RatManager>();
         if (ratManager == null)
             Debug.LogError("[Rat_Input] No RatManager assigned. Drag your RatManager object into the Rat Manager box.");
-
+ 
         if (offlineMode)
             Debug.Log("[Rat_Input] Offline Mode is on: not connecting to Twitch.");
         else
             Connect();
     }
-
+ 
     /// Pretend a viewer typed a message in chat. Used by RatTester.
     public void SimulateChat(string chatter, string msg)
     {
         if (string.IsNullOrWhiteSpace(chatter) || string.IsNullOrWhiteSpace(msg)) return;
         chatter = chatter.Trim().ToLower();
         msg = msg.Trim();
-
+ 
         OnChatMessage?.Invoke(chatter, msg);
         HandleCommand(chatter, msg);
     }
-
+ 
     void Update()
     {
         // Chat lines are read on a background thread; handle them here on the main thread.
@@ -95,7 +98,7 @@ public class Rat_Input : MonoBehaviour
         {
             HandleLine(line);
         }
-
+ 
         if (!connected && !offlineMode)
         {
             reconnectTimer += Time.deltaTime;
@@ -107,45 +110,45 @@ public class Rat_Input : MonoBehaviour
             }
         }
     }
-
+ 
     void OnDestroy()
     {
         Disconnect();
     }
-
+ 
     // ---------------------------------------------------------------------
     // Twitch connection
     // ---------------------------------------------------------------------
-
+ 
     void Connect()
     {
         Disconnect();
-
+ 
         if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(oauth) || string.IsNullOrEmpty(channel))
         {
             Debug.LogError("[Rat_Input] Fill in user, oauth and channel in the Inspector.");
             reconnectTimer = -999f; // don't spam reconnects until fixed
             return;
         }
-
+ 
         try
         {
             twitch = new TcpClient(URL, PORT);
             NetworkStream stream = twitch.GetStream();
             reader = new StreamReader(stream);
             writer = new StreamWriter(stream) { NewLine = "\r\n", AutoFlush = true };
-
+ 
             string pass = oauth.StartsWith("oauth:") ? oauth : "oauth:" + oauth;
             Send("PASS " + pass);
             Send("NICK " + user.ToLower());
             Send("JOIN #" + channel.ToLower());
-
+ 
             connected = true;
             int myId = ++connectionId;
             StreamReader myReader = reader;
             Thread readThread = new Thread(() => ReadLoop(myReader, myId)) { IsBackground = true };
             readThread.Start();
-
+ 
             Debug.Log("[Rat_Input] Connected to Twitch chat #" + channel.ToLower());
         }
         catch (Exception e)
@@ -154,7 +157,7 @@ public class Rat_Input : MonoBehaviour
             connected = false;
         }
     }
-
+ 
     void Disconnect()
     {
         connected = false;
@@ -164,7 +167,7 @@ public class Rat_Input : MonoBehaviour
         reader = null;
         writer = null;
     }
-
+ 
     // Runs on a background thread so ReadLine never freezes the game.
     void ReadLoop(StreamReader r, int id)
     {
@@ -174,14 +177,14 @@ public class Rat_Input : MonoBehaviour
             {
                 string line = r.ReadLine();
                 if (line == null) break; // server closed the connection
-
+ 
                 // Twitch pings about every 5 minutes. We MUST answer or we get kicked.
                 if (line.StartsWith("PING"))
                 {
                     Send("PONG" + line.Substring(4));
                     continue;
                 }
-
+ 
                 incoming.Enqueue(line);
             }
         }
@@ -189,10 +192,10 @@ public class Rat_Input : MonoBehaviour
         {
             // Socket closed or errored, fall through to mark disconnected.
         }
-
+ 
         if (id == connectionId) connected = false;
     }
-
+ 
     void Send(string text)
     {
         lock (writeLock)
@@ -201,11 +204,11 @@ public class Rat_Input : MonoBehaviour
             catch (Exception) { connected = false; }
         }
     }
-
+ 
     // ---------------------------------------------------------------------
     // Chat parsing
     // ---------------------------------------------------------------------
-
+ 
     // Typical line: ":someuser!someuser@someuser.tmi.twitch.tv PRIVMSG #channel :attack bob"
     void HandleLine(string line)
     {
@@ -214,46 +217,46 @@ public class Rat_Input : MonoBehaviour
             Debug.LogError("[Rat_Input] Twitch rejected the login. Check your OAuth token and username.");
             return;
         }
-
+ 
         if (line.Contains(" RECONNECT"))
         {
             connected = false; // Update() will reconnect
             return;
         }
-
+ 
         int privIndex = line.IndexOf(" PRIVMSG ", StringComparison.Ordinal);
         if (privIndex < 0) return;
-
+ 
         int bang = line.IndexOf('!');
         if (bang < 2 || bang > privIndex) return;
         string chatter = line.Substring(1, bang - 1).ToLower();
-
+ 
         int msgStart = line.IndexOf(" :", privIndex, StringComparison.Ordinal);
         if (msgStart < 0) return;
         string msg = line.Substring(msgStart + 2).Trim();
-
+ 
         OnChatMessage?.Invoke(chatter, msg);
         HandleCommand(chatter, msg);
     }
-
+ 
     void HandleCommand(string chatter, string msg)
     {
         if (ratManager == null) return;
-
+ 
         string[] parts = msg.ToLower().Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 0) return;
-
+ 
         string cmd = parts[0];
-
+ 
         // Join
         if (JoinWords.Contains(cmd) && parts.Length == 1)
         {
             GetRatFor(chatter, allowSpawn: true);
             return;
         }
-
+ 
         bool canSpawn = !ratManager.RequireJoinCommand;
-
+ 
         // 1. Go Faster
         if (RunWords.Contains(cmd) && parts.Length == 1)
         {
@@ -262,26 +265,31 @@ public class Rat_Input : MonoBehaviour
                 LogCommand(chatter + " RUNS!");
             return;
         }
-
-        // 2. Attack {username}
-        if (AttackWords.Contains(cmd) && parts.Length >= 2)
+ 
+        // 2. Attack the rat closest to the finish line
+        if (AttackWords.Contains(cmd) && parts.Length == 1)
         {
-            string targetName = parts[1].TrimStart('@');
-            if (targetName == chatter) return;
-
-            RatController target = ratManager.GetRat(targetName);
-            if (target == null) return; // no rat with that name
+            if (finishLine == null)
+            {
+                Debug.LogWarning("[Rat_Input] No Finish Line assigned, so attacks have no target.");
+                return;
+            }
 
             RatController rat = GetRatFor(chatter, canSpawn);
             if (rat == null) return;
 
+            // Never targets yourself: if you're in the lead, you hit 2nd place.
+            RatController target = RatController.FindClosestToFinish(
+                ratManager.AllRats, finishLine.position.x, rat);
+            if (target == null) return; // nobody else left to attack
+
             if (rat.Attack(target, out bool landed))
                 LogCommand(landed
-                    ? chatter + " stunned " + targetName + "!"
-                    : chatter + " attacked " + targetName + " (blocked)");
+                    ? chatter + " stunned " + target.Username + "!"
+                    : chatter + " attacked " + target.Username + " (blocked)");
             return;
         }
-
+ 
         // 3. Defend
         if (DefendWords.Contains(cmd) && parts.Length == 1)
         {
@@ -290,7 +298,7 @@ public class Rat_Input : MonoBehaviour
                 LogCommand(chatter + " defends");
         }
     }
-
+ 
     // Gets the chatter's rat. If they don't have one and allowSpawn is true,
     // asks RatManager to spawn one.
     RatController GetRatFor(string chatter, bool allowSpawn)
@@ -301,19 +309,20 @@ public class Rat_Input : MonoBehaviour
             if (rat != null) ratManager.MarkActive(chatter);
             return rat;
         }
-
+ 
         RatController r = ratManager.GetOrSpawnRat(chatter, out bool isNew);
         if (isNew) LogCommand(chatter + " joined the race!");
         return r;
     }
-
+ 
     void LogCommand(string text)
     {
         recentCommands.Add(text);
         while (recentCommands.Count > recentCommandCount)
             recentCommands.RemoveAt(0);
-
+ 
         if (recentCommandsText != null)
             recentCommandsText.text = string.Join("\n", recentCommands);
     }
 }
+ 

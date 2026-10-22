@@ -10997,6 +10997,11 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &956059268 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7173744927012143534, guid: 427ed64571865454eb04bad542a378de, type: 3}
+  m_PrefabInstance: {fileID: 511989914}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1045244078
 GameObject:
   m_ObjectHideFlags: 0
@@ -11352,8 +11357,9 @@ MonoBehaviour:
   user: lost_my_bawls
   oauth: dxvhnh1asokl1u40f1w66edouke1q5
   channel: lost_my_bawls
-  offlineMode: 0
+  offlineMode: 1
   ratManager: {fileID: 1166363241}
+  finishLine: {fileID: 956059268}
   recentCommandsText: {fileID: 0}
   recentCommandCount: 0
   OnChatMessage:
@@ -11371,7 +11377,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d829002696c4744899b28e458191f9b7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RatTester
-  ratInput: {fileID: 0}
+  ratInput: {fileID: 1166363242}
   fakeUsername: testrat1
   fakeMessage: run
   sendMessage: 0
@@ -11413,7 +11419,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 431.5, y: 216}
+  m_AnchoredPosition: {x: 432.16, y: 216.79997}
   m_SizeDelta: {x: 2157.5, y: 1080}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1359697765

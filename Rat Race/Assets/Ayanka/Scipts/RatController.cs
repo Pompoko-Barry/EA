@@ -1,6 +1,7 @@
 using TMPro;
 using UnityEngine;
 using UnityEngine.Events;
+using System.Collections.Generic;
 
 /// <summary>
 /// One rat in the race. Put this on your rat prefab.
@@ -174,6 +175,41 @@ public class RatController : MonoBehaviour
     }
 
     // ---------------------------------------------------------------------
+
+    // ---------------------------------------------------------------------
+    // Finding the leader
+    // ---------------------------------------------------------------------
+
+    /// How far this rat still has to go to reach finishX (x-axis only).
+    /// Negative means it has already crossed the line.
+    public float DistanceToFinish(float finishX)
+    {
+        return finishX - transform.position.x;
+    }
+
+    /// Returns the rat closest to the finish line on the x-axis that hasn't
+    /// crossed it yet, skipping "exclude" (the attacker). Null if none.
+    public static RatController FindClosestToFinish(IEnumerable<RatController> rats, float finishX, RatController exclude = null)
+    {
+        RatController best = null;
+        float bestDistance = float.MaxValue;
+
+        foreach (RatController r in rats)
+        {
+            if (r == null || r == exclude) continue;
+
+            float d = r.DistanceToFinish(finishX);
+            if (d < 0f) continue; // already finished, can't be attacked
+
+            if (d < bestDistance)
+            {
+                bestDistance = d;
+                best = r;
+            }
+        }
+
+        return best;
+    }
 
     void UpdateVisuals()
     {

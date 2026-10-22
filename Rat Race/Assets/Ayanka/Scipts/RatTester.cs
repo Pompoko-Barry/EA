@@ -109,11 +109,7 @@ public class RatTester : MonoBehaviour
                 msg = "run";
                 break;
             case 1:
-                if (fakeViewers.Count < 2) { msg = "run"; break; }
-                string target;
-                do { target = fakeViewers[Random.Range(0, fakeViewers.Count)]; }
-                while (target == chatter);
-                msg = "attack " + target;
+                msg = "attack";
                 break;
             default:
                 msg = "defend";
