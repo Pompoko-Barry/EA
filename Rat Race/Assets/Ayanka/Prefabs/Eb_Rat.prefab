@@ -193,7 +193,7 @@ MonoBehaviour:
   defendDuration: 2
   defendCooldown: 5
   vulnerableStunMultiplier: 1.5
-  nameLabel: {fileID: 0}
+  nameLabel: {fileID: 504400484105565462}
   spriteRenderer: {fileID: 7627337613257072468}
   boostColor: {r: 1, g: 0.9, b: 0.3, a: 1}
   attackColor: {r: 1, g: 0.4, b: 0.4, a: 1}

@@ -18,7 +18,7 @@ public class RatManager : MonoBehaviour
     [SerializeField] RatController ratPrefab;
     [Tooltip("Where lane 0 is. Each next lane is placed below it.")]
     [SerializeField] Transform spawnPoint;
-    [SerializeField] float laneSpacing = 1.0f;
+    [SerializeField] float laneSpacing = 2.0f;
     [Tooltip("How many lanes fit on the track. When all are full, rats share lanes.")]
     [SerializeField] int maxLanes = 10;
 
@@ -68,6 +68,14 @@ public class RatManager : MonoBehaviour
     // ---------------------------------------------------------------------
     // Getting / spawning rats
     // ---------------------------------------------------------------------
+
+    public void ActivateRats()
+    {
+        foreach (var (user,rat) in rats)
+        {
+            rat.rat.isActive = true;
+        }
+    }
 
     /// Returns this viewer's rat, or null if they don't have one.
     public RatController GetRat(string username)

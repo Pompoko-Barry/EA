@@ -41,7 +41,7 @@ public class RatController : MonoBehaviour
     [SerializeField] float vulnerableStunMultiplier = 1.5f;
 
     [Header("Visuals (optional)")]
-    [SerializeField] TextMeshPro nameLabel;
+    public TMP_Text nameLabel;
     [SerializeField] SpriteRenderer spriteRenderer;
     [SerializeField] Color boostColor = new Color(1f, 0.9f, 0.3f);
     [SerializeField] Color attackColor = new Color(1f, 0.4f, 0.4f);
@@ -67,6 +67,9 @@ public class RatController : MonoBehaviour
     public bool IsStunned => stunTimer > 0f;
     public bool IsVulnerable => IsBoosting || IsAttacking;
 
+    // Eb script
+    public bool isActive = false;
+
     void Awake()
     {
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
@@ -82,6 +85,7 @@ public class RatController : MonoBehaviour
 
     void Update()
     {
+        if (isActive) {
         float dt = Time.deltaTime;
 
         boostTimer = Mathf.Max(0f, boostTimer - dt);
@@ -99,6 +103,7 @@ public class RatController : MonoBehaviour
         }
 
         UpdateVisuals();
+        }
     }
 
     // ---------------------------------------------------------------------
