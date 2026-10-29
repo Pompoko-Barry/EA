@@ -15,6 +15,9 @@ public class GameStateManager : MonoBehaviour
     //public TMP_Text stateControlsUI;
     private float currentTimer;
     public RatManager ratManager;
+    public AudioSource bgMusic;
+    public float music_defaultPitch = 0.9f;
+    public float music_racingPitch = 1.3f;
 
     [Header("Spawning State")]
     public string spawningHeaderString;
@@ -25,6 +28,7 @@ public class GameStateManager : MonoBehaviour
     public string racingHeaderString;
     public string racingControlsString;
     public event Action onRacingBegin;
+    public AudioSource countdownSFX;
 
     [Header("Game Over State")]
     public string gameOverHeaderString;
@@ -36,6 +40,7 @@ public class GameStateManager : MonoBehaviour
     public GameObject spotlightPanel;
     public GameObject blackPanel;
     public ParticleSystem confetti;
+    public AudioSource confettiSFX, hornSFX, clapSFX;
 
     [Header("Transition State")]
     public string transitionHeaderString;
@@ -103,9 +108,14 @@ public class GameStateManager : MonoBehaviour
 
         yield return new WaitForSeconds(timeToTurnOnSpotlight);
 
+        // animation
         blackPanel.SetActive(false);
         spotlightPanel.SetActive(true);
         confetti.Play();
+        // sfx
+        confettiSFX.Play();
+        hornSFX.Play();
+        clapSFX.Play();
     }
 
     // use this to set the game state
@@ -118,6 +128,8 @@ public class GameStateManager : MonoBehaviour
         }
 
         _state = state;
+
+        bgMusic.pitch = music_defaultPitch;
 
         switch (_state)
         {
@@ -132,6 +144,7 @@ public class GameStateManager : MonoBehaviour
                 timerUI.text = " ";
                 onRacingBegin?.Invoke();
                 ratManager.ActivateRats(true);
+                bgMusic.pitch = music_racingPitch;
                 break;
             case GameState.GAME_OVER:
                 stateHeaderUI.text = gameOverHeaderString;
@@ -178,9 +191,37 @@ public class GameStateManager : MonoBehaviour
 
     private void TransitionUpdate()
     {
+        float previousTime = currentTimer;
+
         bool timesUp = UpdateCurrentTimer();
-        if (timesUp)
+
+        if(nextState == GameState.RACING)
         {
+            if(previousTime > 3f && currentTimer <= 3f)
+            {
+                countdownSFX.pitch = 1f;
+                countdownSFX.Play();
+            }
+            else if(previousTime > 2f && currentTimer <= 2f)
+            {
+                countdownSFX.pitch = 1f;
+                countdownSFX.Play();
+            }
+            else if(previousTime > 1f && currentTimer <= 1f)
+            {
+                countdownSFX.pitch = 1f;
+                countdownSFX.Play();
+            }
+        }
+
+        if (timesUp)
+        { 
+            if (nextState == GameState.RACING)
+            {
+                countdownSFX.pitch = 1.2f;
+                countdownSFX.Play();
+            }
+
             SetState(nextState);
         }
     }

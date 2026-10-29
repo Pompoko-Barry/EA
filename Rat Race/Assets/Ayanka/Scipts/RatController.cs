@@ -24,6 +24,7 @@ public class RatController : MonoBehaviour
     [SerializeField] float boostSpeed = 4f;
     [SerializeField] float boostDuration = 1f;
     [SerializeField] float boostCooldown = 3f;
+    public AudioClip runSound;
 
     [Header("2. Attack")]
     [Tooltip("Max distance to the target. 0 = can attack anyone.")]
@@ -32,10 +33,13 @@ public class RatController : MonoBehaviour
     [SerializeField] float attackDuration = 0.75f;
     [SerializeField] float stunDuration = 2f;
     [SerializeField] float attackCooldown = 4f;
+    public AudioClip attackSound;
 
     [Header("3. Defend")]
     [SerializeField] float defendDuration = 2f;
     [SerializeField] float defendCooldown = 5f;
+    public AudioClip defendSound;
+    public float defendsfx_playDelay = 0.2f;
 
     [Header("Vulnerability")]
     [Tooltip("Stun length is multiplied by this if the target is boosting or attacking. Set to 1 to turn off.")]
@@ -48,6 +52,8 @@ public class RatController : MonoBehaviour
     [SerializeField] float spinSpeed = 720f;
     [Tooltip("(0,1,0) spins like a top seen from the side. (0,0,1) spins flat like a wheel.")]
     [SerializeField] Vector3 spinAxis = new Vector3(0f, 1f, 0f);
+    public AudioClip stunSound;
+    public float stunsfx_playDelay = 0.2f;
 
     [Header("Visuals (optional)")]
     public TMP_Text nameLabel;
@@ -78,6 +84,7 @@ public class RatController : MonoBehaviour
 
     // Eb script
     public bool isActive = false;
+    public AudioSource sfxSource;
 
     Quaternion originalRotation; // which way the rat faced before spinning
     bool isSpinning;
@@ -136,6 +143,11 @@ public class RatController : MonoBehaviour
         boostTimer = boostDuration;
         boostCdTimer = boostCooldown;
         OnBoost?.Invoke();
+
+        sfxSource.clip = runSound;
+        sfxSource.pitch = Random.Range(0.95f, 1.05f);
+        sfxSource.Play();
+
         return true;
     }
 
@@ -153,6 +165,10 @@ public class RatController : MonoBehaviour
         attackTimer = attackDuration;
         attackCdTimer = attackCooldown;
         OnAttack?.Invoke();
+
+        sfxSource.clip = attackSound;
+        sfxSource.pitch = Random.Range(0.95f, 1.05f);
+        sfxSource.Play();
 
         landed = target.ReceiveAttack(this);
         return true;
@@ -177,6 +193,11 @@ public class RatController : MonoBehaviour
         if (IsDefending)
         {
             OnBlockedAttack?.Invoke();
+
+            sfxSource.clip = defendSound;
+            sfxSource.pitch = 1f;
+            sfxSource.PlayDelayed(defendsfx_playDelay);
+
             return false;
         }
 
@@ -187,6 +208,11 @@ public class RatController : MonoBehaviour
         boostTimer = 0f;
         attackTimer = 0f;
         OnStunned?.Invoke();
+
+        sfxSource.clip = stunSound;
+        sfxSource.pitch = 1f;
+        sfxSource.PlayDelayed(stunsfx_playDelay);
+
         return true;
     }
 
