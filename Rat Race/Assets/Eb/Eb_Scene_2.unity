@@ -311,8 +311,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 69256074}
   m_HandleRect: {fileID: 684347935}
   m_Direction: 2
-  m_Value: 1.0000013
-  m_Size: 0.84584063
+  m_Value: 1.0000008
+  m_Size: 0.8444444
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -720,7 +720,7 @@ MonoBehaviour:
   user: lost_my_bawls
   oauth: dxvhnh1asokl1u40f1w66edouke1q5
   channel: lost_my_bawls
-  offlineMode: 0
+  offlineMode: 1
   ratManager: {fileID: 187558749}
   finishLine: {fileID: 373428330}
   recentCommandsText: {fileID: 0}

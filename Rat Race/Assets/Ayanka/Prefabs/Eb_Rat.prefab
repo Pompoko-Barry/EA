@@ -195,6 +195,9 @@ MonoBehaviour:
   defendDuration: 2
   defendCooldown: 5
   vulnerableStunMultiplier: 1.5
+  spinTarget: {fileID: 5524457058881204209}
+  spinSpeed: 720
+  spinAxis: {x: 0, y: 0, z: 1}
   nameLabel: {fileID: 504400484105565462}
   spriteRenderer: {fileID: 7627337613257072468}
   boostColor: {r: 1, g: 0.9, b: 0.3, a: 1}

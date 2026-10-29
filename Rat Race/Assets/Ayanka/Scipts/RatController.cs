@@ -13,7 +13,7 @@ using System.Collections.Generic;
 ///
 /// Any rat that isn't defending can be stunned. Vulnerable rats (boosting or
 /// attacking) get stunned for longer (see vulnerableStunMultiplier).
-/// Stunned rats can't move or use commands.
+/// Stunned rats can't move or use commands, and spin in place until the stun ends.
 /// </summary>
 public class RatController : MonoBehaviour
 {
@@ -40,6 +40,14 @@ public class RatController : MonoBehaviour
     [Header("Vulnerability")]
     [Tooltip("Stun length is multiplied by this if the target is boosting or attacking. Set to 1 to turn off.")]
     [SerializeField] float vulnerableStunMultiplier = 1.5f;
+
+    [Header("Stun Spin")]
+    [Tooltip("The object that spins when stunned. Leave empty to use the rat's sprite.")]
+    [SerializeField] Transform spinTarget;
+    [Tooltip("How fast the rat spins, in degrees per second.")]
+    [SerializeField] float spinSpeed = 720f;
+    [Tooltip("(0,1,0) spins like a top seen from the side. (0,0,1) spins flat like a wheel.")]
+    [SerializeField] Vector3 spinAxis = new Vector3(0f, 1f, 0f);
 
     [Header("Visuals (optional)")]
     public TMP_Text nameLabel;
@@ -71,10 +79,17 @@ public class RatController : MonoBehaviour
     // Eb script
     public bool isActive = false;
 
+    Quaternion originalRotation; // which way the rat faced before spinning
+    bool isSpinning;
+
     void Awake()
     {
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
         if (spriteRenderer != null) normalColor = spriteRenderer.color;
+
+        if (spinTarget == null && spriteRenderer != null) spinTarget = spriteRenderer.transform;
+        if (spinTarget == null) spinTarget = transform;
+        originalRotation = spinTarget.localRotation;
     }
 
     public void Init(string username)
@@ -103,6 +118,7 @@ public class RatController : MonoBehaviour
             transform.Translate(Vector3.right * speed * dt, Space.World);
         }
 
+        UpdateSpin(dt);
         UpdateVisuals();
         }
     }
@@ -175,8 +191,6 @@ public class RatController : MonoBehaviour
     }
 
     // ---------------------------------------------------------------------
-
-    // ---------------------------------------------------------------------
     // Finding the leader
     // ---------------------------------------------------------------------
 
@@ -209,6 +223,26 @@ public class RatController : MonoBehaviour
         }
 
         return best;
+    }
+
+    // ---------------------------------------------------------------------
+    // Visuals
+    // ---------------------------------------------------------------------
+
+    // Spins the rat while it's stunned. When the stun ends, it faces its
+    // original direction again.
+    void UpdateSpin(float dt)
+    {
+        if (IsStunned)
+        {
+            spinTarget.Rotate(spinAxis * spinSpeed * dt, Space.Self);
+            isSpinning = true;
+        }
+        else if (isSpinning)
+        {
+            spinTarget.localRotation = originalRotation;
+            isSpinning = false;
+        }
     }
 
     void UpdateVisuals()
