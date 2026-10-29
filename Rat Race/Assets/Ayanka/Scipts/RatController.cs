@@ -89,6 +89,8 @@ public class RatController : MonoBehaviour
     Quaternion originalRotation; // which way the rat faced before spinning
     bool isSpinning;
 
+    public Animator extrasAnim;
+
     void Awake()
     {
         if (spriteRenderer == null) spriteRenderer = GetComponentInChildren<SpriteRenderer>();
@@ -108,25 +110,29 @@ public class RatController : MonoBehaviour
 
     void Update()
     {
-        if (isActive) {
-        float dt = Time.deltaTime;
-
-        boostTimer = Mathf.Max(0f, boostTimer - dt);
-        attackTimer = Mathf.Max(0f, attackTimer - dt);
-        defendTimer = Mathf.Max(0f, defendTimer - dt);
-        stunTimer = Mathf.Max(0f, stunTimer - dt);
-        boostCdTimer = Mathf.Max(0f, boostCdTimer - dt);
-        attackCdTimer = Mathf.Max(0f, attackCdTimer - dt);
-        defendCdTimer = Mathf.Max(0f, defendCdTimer - dt);
-
-        if (!IsStunned)
+        if (isActive)
         {
-            float speed = IsBoosting ? boostSpeed : baseSpeed;
-            transform.Translate(Vector3.right * speed * dt, Space.World);
-        }
+            float dt = Time.deltaTime;
 
-        UpdateSpin(dt);
-        UpdateVisuals();
+            boostTimer = Mathf.Max(0f, boostTimer - dt);
+            attackTimer = Mathf.Max(0f, attackTimer - dt);
+            defendTimer = Mathf.Max(0f, defendTimer - dt);
+            stunTimer = Mathf.Max(0f, stunTimer - dt);
+            boostCdTimer = Mathf.Max(0f, boostCdTimer - dt);
+            attackCdTimer = Mathf.Max(0f, attackCdTimer - dt);
+            defendCdTimer = Mathf.Max(0f, defendCdTimer - dt);
+
+            if (IsDefending) { extrasAnim.SetBool("isDefending", true); }
+            else { extrasAnim.SetBool("isDefending", false); }
+
+            if (!IsStunned)
+            {
+                float speed = IsBoosting ? boostSpeed : baseSpeed;
+                transform.Translate(Vector3.right * speed * dt, Space.World);
+            }
+
+            UpdateSpin(dt);
+            UpdateVisuals();
         }
     }
 
@@ -166,6 +172,8 @@ public class RatController : MonoBehaviour
         attackCdTimer = attackCooldown;
         OnAttack?.Invoke();
 
+        extrasAnim.SetTrigger("attack");
+        // sfx
         sfxSource.clip = attackSound;
         sfxSource.pitch = Random.Range(0.95f, 1.05f);
         sfxSource.Play();
@@ -184,6 +192,7 @@ public class RatController : MonoBehaviour
         defendTimer = defendDuration;
         defendCdTimer = defendCooldown;
         OnDefend?.Invoke();
+
         return true;
     }
 
@@ -194,6 +203,9 @@ public class RatController : MonoBehaviour
         {
             OnBlockedAttack?.Invoke();
 
+            extrasAnim.SetTrigger("ricochet");
+
+            // sfx
             sfxSource.clip = defendSound;
             sfxSource.pitch = 1f;
             sfxSource.PlayDelayed(defendsfx_playDelay);
@@ -209,6 +221,9 @@ public class RatController : MonoBehaviour
         attackTimer = 0f;
         OnStunned?.Invoke();
 
+        extrasAnim.SetTrigger("hit");
+
+        // sfx
         sfxSource.clip = stunSound;
         sfxSource.pitch = 1f;
         sfxSource.PlayDelayed(stunsfx_playDelay);
