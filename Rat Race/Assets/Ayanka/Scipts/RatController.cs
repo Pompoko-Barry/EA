@@ -25,6 +25,7 @@ public class RatController : MonoBehaviour
     [SerializeField] float boostDuration = 1f;
     [SerializeField] float boostCooldown = 3f;
     public AudioClip runSound;
+    public ParticleSystem runCloudParticle;
 
     [Header("2. Attack")]
     [Tooltip("Max distance to the target. 0 = can attack anyone.")]
@@ -99,6 +100,9 @@ public class RatController : MonoBehaviour
         if (spinTarget == null && spriteRenderer != null) spinTarget = spriteRenderer.transform;
         if (spinTarget == null) spinTarget = transform;
         originalRotation = spinTarget.localRotation;
+
+        var emission = runCloudParticle.emission; 
+        emission.enabled = false;
     }
 
     public void Init(string username)
@@ -124,6 +128,9 @@ public class RatController : MonoBehaviour
 
             if (IsDefending) { extrasAnim.SetBool("isDefending", true); }
             else { extrasAnim.SetBool("isDefending", false); }
+
+            if (IsBoosting) { var emission = runCloudParticle.emission; emission.enabled = true; }
+            else { var emission = runCloudParticle.emission; emission.enabled = false; }
 
             if (!IsStunned)
             {

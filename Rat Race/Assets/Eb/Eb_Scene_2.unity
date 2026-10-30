@@ -311,8 +311,8 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 69256074}
   m_HandleRect: {fileID: 684347935}
   m_Direction: 2
-  m_Value: 1.0000005
-  m_Size: 0.84444433
+  m_Value: 1.0000008
+  m_Size: 0.8462104
   m_NumberOfSteps: 0
   m_OnValueChanged:
     m_PersistentCalls:
@@ -669,7 +669,7 @@ MonoBehaviour:
   music_racingPitch: 1.2
   spawningHeaderString: Waiting for Players...
   spawningControlsString: '<b>Controls:</b> Join Game [ j, join ]'
-  spawningTime: 25
+  spawningTime: 5
   racingHeaderString: Go!
   racingControlsString: '<b>Controls:</b> Run Fast [ r, run, 1 ] Defend Self [ d,
     defend, 3 ] \nAttack Player [ a username, attack username, 2 username ]'
